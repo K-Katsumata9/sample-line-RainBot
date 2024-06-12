@@ -1,3 +1,3 @@
 # sample-line-RainBot
 
-## Lambda/API Gateway/Ruby/LINE_BOT
+## VPC/NAT Gatewat/EIP/Lambda/API Gateway/RDS/Ruby/LINE_BOT

@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     line-bot-api (1.28.0)
+    mysql2 (0.5.6)
 
 PLATFORMS
   ruby
@@ -9,6 +10,7 @@ PLATFORMS
 
 DEPENDENCIES
   line-bot-api
+  mysql2
 
 BUNDLED WITH
    2.5.11

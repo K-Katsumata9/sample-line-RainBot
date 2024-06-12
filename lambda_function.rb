@@ -6,6 +6,8 @@ require 'line/bot'
 require 'open-uri'
 require 'kconv'
 require 'rexml/document'
+require 'mysql2'
+
 
 def lambda_handler(event:, context:)
     logger = Logger.new(STDOUT)
@@ -14,6 +16,7 @@ def lambda_handler(event:, context:)
     }
     logger.formatter = log_formatter
     
+    logger.info event
     signature = event["headers"]["x-line-signature"]
     lambda_event_body = JSON.parse(event['body'])
     body = lambda_event_body.to_json
@@ -23,7 +26,7 @@ def lambda_handler(event:, context:)
     
     
     events =  lambda_event_body["events"]
-    
+    logger.info events
     events.each { |event|
       case event["type"]
         # メッセージが送信された場合の対応（機能①）
@@ -100,7 +103,14 @@ def lambda_handler(event:, context:)
           text: push
         }
         client.reply_message(event['replyToken'], message)
-        # LINEお友達追された場合（機能②）
+      when "follow"
+        line_id = event['source']['userId']
+        add_user_to_database(line_id)
+        logger.info "User added: #{line_id}"
+      when "unfollow"
+        line_id = event['source']['userId']
+        remove_user_from_database(line_id)
+        logger.info "User removed: #{line_id}"
       end
     }
     
@@ -114,4 +124,27 @@ private
           config.channel_secret = ENV["LINE_CHANNEL_SECRET"]
           config.channel_token = ENV["LINE_CHANNEL_TOKEN"]
         }
+    end
+    
+    def dbclient 
+        dbclient = Mysql2::Client.new(
+            host: ENV['DB_HOST'],
+            username: ENV['DB_USER'],
+            password: ENV['DB_PW'],
+            database: "rain_bot_development"
+        )
+    end
+
+    def add_user_to_database(user_id)
+        dbclient
+        query = "INSERT INTO users (line_id) VALUES ('#{dbclient.escape(user_id)}')"
+        dbclient.query(query)
+        dbclient.close
+    end
+    
+    def remove_user_from_database(user_id)
+        dbclient
+        query = "DELETE FROM users WHERE line_id = '#{dbclient.escape(user_id)}'"
+        dbclient.query(query)
+        dbclient.close
     end
